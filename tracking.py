@@ -31,6 +31,9 @@ def start():
     cv2.namedWindow('image')
     threshold_value = 80
     cv2.createTrackbar('threshold', 'image', threshold_value, 255, nothing)
+    eye_count = 0
+    last_blink = time.time()
+    rec_blink = 0
 
     while True:
         # init = time.time()
@@ -45,6 +48,7 @@ def start():
             # left and right parsed separately
             for eye in eyes:
                 if eye is not None:
+                    # print('eyes')
                     threshold_value = cv2.getTrackbarPos(
                         'threshold', 'image')
                     eye = remove_others(eye)
@@ -52,9 +56,21 @@ def start():
                     # Check if there is movement of the iris
                     h, w, c = eye.shape
                     if kp:
-                        determine_movement(kp[0].pt, w, h)
-                    eye = cv2.drawKeypoints(
-                        eye, kp, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+                        # determine_movement(kp[0].pt, w, h)
+                        eye = cv2.drawKeypoints(
+                            eye, kp, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+                    eye_count = 0
+                else:
+                    eye_count += 1
+                    print('c', eye_count)
+                    if eye_count == 3:
+                        print('blinked')
+                        if time.time() - last_blink < 30:
+                            rec_blink += 1
+                        else:
+                            rec_blink = 1
+                        last_blink = time.time()
+
         time.sleep(0.3)
         cv2.imshow('image', frame)
         key = cv2.waitKey(1)
