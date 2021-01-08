@@ -8,11 +8,21 @@ face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 eye_cascade = cv2.CascadeClassifier('haarcascade_eye_tree_eyeglasses.xml')
 params = cv2.SimpleBlobDetector_Params()
 
-# change params settings t0 use size as a filter
+# change params settings to use size as a filter
 # Might add other filters such as color or circular too.
 params.maxArea = 1500
 params.filterByArea = True
 detector = cv2.SimpleBlobDetector_create(params)
+
+# Global variables
+prev = 0
+curr = 0
+left_track = 0
+right_track = 0
+top_track = 0
+bot_track = 0
+# Threshold before the program declare a direction
+th = 2
 
 
 def start():
@@ -21,11 +31,11 @@ def start():
     cap = ConcurrentVideoCapture(0)
     # cap = cv2.VideoCapture(0)
     cv2.namedWindow('image')
-    threshold_value = 65
+    threshold_value = 80
     cv2.createTrackbar('threshold', 'image', threshold_value, 255, nothing)
 
     while True:
-        init = time.time()
+        # init = time.time()
         _, frame = cap.read()
         face = detect_faces(frame, face_cascade)
         if face is not None:
@@ -41,18 +51,54 @@ def start():
                         'threshold', 'image')
                     eye = remove_others(eye)
                     kp = process_eye_using_blob(eye, threshold_value, detector)
-                    # print(kp)
+                    # Check if there is movement of the iris
+                    if kp:
+                        determine_movement(kp[0].pt)
                     eye = cv2.drawKeypoints(
                         eye, kp, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-
+        time.sleep(0.05)
         cv2.imshow('image', frame)
         key = cv2.waitKey(1)
         if key == 27:  # ESC
             break
-        fps = 1/(time.time() - init)
-        print('Fps: {}'.format(fps))
+        # fps = 1/(time.time() - init)
+        # print('Fps: {}'.format(fps))
     cap.release()
     cv2.destroyAllWindows()
+
+# Check if there is lateral or longitudinal movement
+
+
+def determine_movement(coord):
+    check_lat(coord[0])
+    # bool long_mov = check_long(coord[1])
+    # print(coord)
+
+
+def check_lat(x):
+    global left_track
+    global right_track
+    global prev
+    # print('prev', prev)
+    # print('x', x)
+    # print('left', left_track, 'right', right_track)
+    if prev == 0:
+        pass
+    elif x > prev:
+        left_track = 0
+        right_track += 1
+        if (right_track > th):
+            print('Right')
+            right_track = 0
+    elif x < prev:
+        right_track = 0
+        left_track += 1
+        if (left_track > th):
+            print('Left')
+            left_track = 0
+    else:
+        pass
+    prev = x
 
 
 def nothing(x):
