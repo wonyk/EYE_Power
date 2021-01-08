@@ -15,12 +15,10 @@ params.filterByArea = True
 detector = cv2.SimpleBlobDetector_create(params)
 
 # Global variables
-prev = 0
-reset = None
 left_track = 0
 right_track = 0
-top_track = 0
-bot_track = 0
+up_track = 0
+down_track = 0
 # Threshold before the program declare a direction
 th = 3
 
@@ -54,7 +52,7 @@ def start():
                     # Check if there is movement of the iris
                     h, w, c = eye.shape
                     if kp:
-                        determine_movement(kp[0].pt, w)
+                        determine_movement(kp[0].pt, w, h)
                     eye = cv2.drawKeypoints(
                         eye, kp, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
         time.sleep(0.3)
@@ -68,9 +66,9 @@ def start():
     cv2.destroyAllWindows()
 
 
-def determine_movement(coord, width):
-    check_lat(coord[0], width)
-    # bool long_mov = check_long(coord[1])
+def determine_movement(coord, width, height):
+    # check_lat(coord[0], width)
+    check_long(coord[1], height)
     # print(coord)
 
 
@@ -94,7 +92,29 @@ def check_lat(x, w):
             right_track = 0
     else:
         pass
-    # prev = x
+
+
+def check_long(y, h):
+    global up_track
+    global down_track
+    print('y:', y, 'h:', h / 2)
+    if y > (h - 1) / 2:
+        up_track += 1
+        print('t', up_track)
+        if (up_track > th):
+            print('Up')
+            up_track = 0
+            down_track = 0
+    # Down is a little buggy so I might skip down
+    elif y < (h - 2) / 2:
+        down_track += 1
+        print('d', down_track)
+        if (down_track > th):
+            print('Down')
+            down_track = 0
+            up_track = 0
+    else:
+        pass
 
 
 def nothing(x):
