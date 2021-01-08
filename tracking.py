@@ -16,13 +16,13 @@ detector = cv2.SimpleBlobDetector_create(params)
 
 # Global variables
 prev = 0
-curr = 0
+reset = None
 left_track = 0
 right_track = 0
 top_track = 0
 bot_track = 0
 # Threshold before the program declare a direction
-th = 2
+th = 3
 
 
 def start():
@@ -52,11 +52,12 @@ def start():
                     eye = remove_others(eye)
                     kp = process_eye_using_blob(eye, threshold_value, detector)
                     # Check if there is movement of the iris
+                    h, w, c = eye.shape
                     if kp:
-                        determine_movement(kp[0].pt)
+                        determine_movement(kp[0].pt, w)
                     eye = cv2.drawKeypoints(
                         eye, kp, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-        time.sleep(0.05)
+        time.sleep(0.3)
         cv2.imshow('image', frame)
         key = cv2.waitKey(1)
         if key == 27:  # ESC
@@ -66,39 +67,34 @@ def start():
     cap.release()
     cv2.destroyAllWindows()
 
-# Check if there is lateral or longitudinal movement
 
-
-def determine_movement(coord):
-    check_lat(coord[0])
+def determine_movement(coord, width):
+    check_lat(coord[0], width)
     # bool long_mov = check_long(coord[1])
     # print(coord)
 
 
-def check_lat(x):
+def check_lat(x, w):
     global left_track
     global right_track
-    global prev
-    # print('prev', prev)
-    # print('x', x)
-    # print('left', left_track, 'right', right_track)
-    if prev == 0:
-        pass
-    elif x > prev:
-        left_track = 0
+    print('x:', x, 'w:', (w + 2) / 2)
+    if x > (w + 3) / 2:
         right_track += 1
+        print('r', right_track)
         if (right_track > th):
             print('Right')
             right_track = 0
-    elif x < prev:
-        right_track = 0
+            left_track = 0
+    elif x < (w - 2) / 2:
         left_track += 1
+        print('l', left_track)
         if (left_track > th):
             print('Left')
             left_track = 0
+            right_track = 0
     else:
         pass
-    prev = x
+    # prev = x
 
 
 def nothing(x):
