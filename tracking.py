@@ -43,7 +43,7 @@ def start():
 
     # Create a strem output
     h, w = frame.shape[:2]
-    # stream_camera = pyfakewebcam.FakeWebcam('/dev/video2', w, h)
+    stream_camera = pyfakewebcam.FakeWebcam('/dev/video2', w, h)
 
     while True:
         # init = time.time()
@@ -93,7 +93,7 @@ def start():
         cv2.imshow('image', frame)
 
         # Write to vertual camera
-        # stream_camera.schedule_frame(frame[..., ::-1])
+        stream_camera.schedule_frame(frame[..., ::-1])
         key = cv2.waitKey(1)
         if key == 27:  # ESC
             break
