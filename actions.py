@@ -3,6 +3,7 @@
 import pyautogui
 import time
 
+
 def handle_left(prev_cmd):
     if prev_cmd == 'L':
         pyautogui.hotkey('alt', 'tab')
@@ -37,6 +38,7 @@ def handle_blink(count):
     elif count > 4:
         pyautogui.alert(text='We notice that you blinked a lot recently! Take a break.',
                         title='Tired eyes?', button='OK')
+    return time.time()
 
 
 def roll_eyes():

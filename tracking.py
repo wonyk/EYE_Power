@@ -81,15 +81,15 @@ def start():
                     # print('c', eye_count)
                     if eye_count == 3:
                         print('rec b', rec_blink)
-                        if time.time() - last_blink < 1.5:
+                        if time.time() - last_blink < 2:
                             rec_blink += 1
                         else:
                             rec_blink = 1
                         # print(rec_blink)
-                        handle_blink(rec_blink)
-                        last_blink = time.time()
+                        last_blink = handle_blink(rec_blink)
+                        # last_blink = time.time()
 
-        time.sleep(0.2)
+        time.sleep(0.1)
         cv2.imshow('image', frame)
 
         # Write to vertual camera
