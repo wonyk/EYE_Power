@@ -6,18 +6,21 @@ import time
 
 def handle_left(prev_cmd):
     if prev_cmd == 'L':
-        pyautogui.hotkey('alt', 'tab')
+        pass
+        # pyautogui.hotkey('alt', 'tab')
     return 'L'
 
 
 def handle_right(prev_cmd):
     if prev_cmd == 'R':
         roll_eyes()
+        pass
     return 'R'
 
 
 def handle_up(prev_cmd):
     if prev_cmd == 'U':
+        print('rolllll')
         pyautogui.write('sudo !!')
     return 'U'
 
@@ -28,7 +31,8 @@ def handle_down(prev_cmd):
 
 def handle_blink(count):
     if count == 2:
-        pyautogui.hotkey('ctrl', 'shift', 'M')
+        pass
+        # pyautogui.hotkey('ctrl', 'shift', 'M')
     elif count == 3:
         im = pyautogui.screenshot()
         cfm = pyautogui.confirm('Save screenshot?')

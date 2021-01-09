@@ -3,6 +3,7 @@ import numpy as np
 import time
 from concurrent_videocapture import ConcurrentVideoCapture
 import pyfakewebcam
+# from mss import mss
 from actions import handle_blink, handle_down, handle_left, handle_right, handle_up
 
 # Credits for openCV documentation
@@ -29,13 +30,11 @@ th = 3
 
 
 def start():
-    # im = cv2.imread('face1.jpg')
-    # img = cv2.resize(im, (720, 960))
     cap = ConcurrentVideoCapture(0)
     # cap = cv2.VideoCapture(0)
     cv2.namedWindow('image')
     _, frame = cap.read()
-    threshold_value = 100
+    threshold_value = 80
     cv2.createTrackbar('threshold', 'image', threshold_value, 255, nothing)
     eye_count = 0
     last_blink = time.time()
@@ -61,7 +60,8 @@ def start():
                     threshold_value = cv2.getTrackbarPos(
                         'threshold', 'image')
                     eye = remove_others(eye)
-                    kp = process_eye_using_blob(eye, threshold_value, detector)
+                    kp = process_eye_using_blob(
+                        eye, threshold_value, detector)
                     # Check if there is movement of the iris
                     h, w, c = eye.shape
                     if kp:
@@ -81,13 +81,13 @@ def start():
                     # print('c', eye_count)
                     if eye_count == 3:
                         print('rec b', rec_blink)
-                        if time.time() - last_blink < 2:
+                        if time.time() - last_blink < 1.2:
                             rec_blink += 1
                         else:
-                            handle_blink(rec_blink)
                             rec_blink = 1
                         # print(rec_blink)
-                        last_blink = time.time()
+                        last_blink = handle_blink(rec_blink)
+                        # last_blink = time.time()
 
         time.sleep(0.1)
         cv2.imshow('image', frame)
@@ -114,7 +114,7 @@ def check_lat(x, w):
     global right_track
     global prev_cmd
     # print('x:', x, 'w:', (w + 2) / 2)
-    if round(x, 1) > (w + 3) / 2:
+    if round(x, 1) > (w + 5) / 2:
         right_track += 1
         # print('r', right_track)
         if (right_track > th):
@@ -139,7 +139,7 @@ def check_long(y, h):
     global down_track
     global prev_cmd
     # print('y:', y, 'h:', h / 2)
-    if round(y, 1) > (h - 1) / 2:
+    if round(y, 1) > (h - 0.4) / 2:
         up_track += 1
         # print('t', up_track)
         if (up_track > th):
