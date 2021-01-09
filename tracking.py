@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import time
 from concurrent_videocapture import ConcurrentVideoCapture
+import pyfakewebcam
+from actions import handle_blink, handle_down, handle_left, handle_right, handle_up
 
 # Credits for openCV documentation
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
@@ -15,6 +17,7 @@ params.filterByArea = True
 detector = cv2.SimpleBlobDetector_create(params)
 
 # Global variables
+# Track is to ensure the movement sustained for a while before deciding
 left_track = 0
 right_track = 0
 up_track = 0
@@ -29,11 +32,16 @@ def start():
     cap = ConcurrentVideoCapture(0)
     # cap = cv2.VideoCapture(0)
     cv2.namedWindow('image')
-    threshold_value = 80
+    _, frame = cap.read()
+    threshold_value = 100
     cv2.createTrackbar('threshold', 'image', threshold_value, 255, nothing)
     eye_count = 0
     last_blink = time.time()
     rec_blink = 0
+
+    # Create a strem output
+    h, w = frame.shape[:2]
+    stream_camera = pyfakewebcam.FakeWebcam('/dev/video2', w, h)
 
     while True:
         # init = time.time()
@@ -48,7 +56,6 @@ def start():
             # left and right parsed separately
             for eye in eyes:
                 if eye is not None:
-                    # print('eyes')
                     threshold_value = cv2.getTrackbarPos(
                         'threshold', 'image')
                     eye = remove_others(eye)
@@ -56,23 +63,28 @@ def start():
                     # Check if there is movement of the iris
                     h, w, c = eye.shape
                     if kp:
-                        # determine_movement(kp[0].pt, w, h)
+                        determine_movement(kp[0].pt, w, h)
                         eye = cv2.drawKeypoints(
                             eye, kp, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
                     eye_count = 0
                 else:
                     eye_count += 1
                     print('c', eye_count)
-                    if eye_count == 3:
+                    if eye_count == 5:
                         print('blinked')
-                        if time.time() - last_blink < 30:
+                        if time.time() - last_blink < 1.5:
                             rec_blink += 1
                         else:
                             rec_blink = 1
+                        # print(rec_blink)
+                        handle_blink(rec_blink)
                         last_blink = time.time()
 
-        time.sleep(0.3)
+        time.sleep(0.2)
         cv2.imshow('image', frame)
+
+        # Write to vertual camera
+        stream_camera.schedule_frame(frame[..., ::-1])
         key = cv2.waitKey(1)
         if key == 27:  # ESC
             break
@@ -83,7 +95,7 @@ def start():
 
 
 def determine_movement(coord, width, height):
-    # check_lat(coord[0], width)
+    check_lat(coord[0], width)
     check_long(coord[1], height)
     # print(coord)
 
@@ -92,18 +104,20 @@ def check_lat(x, w):
     global left_track
     global right_track
     print('x:', x, 'w:', (w + 2) / 2)
-    if x > (w + 3) / 2:
+    if round(x, 1) > (w + 3) / 2:
         right_track += 1
         print('r', right_track)
         if (right_track > th):
             print('Right')
+            handle_right()
             right_track = 0
             left_track = 0
-    elif x < (w - 2) / 2:
+    elif round(x, 1) < (w - 2) / 2:
         left_track += 1
         print('l', left_track)
         if (left_track > th):
             print('Left')
+            handle_left()
             left_track = 0
             right_track = 0
     else:
@@ -114,19 +128,21 @@ def check_long(y, h):
     global up_track
     global down_track
     print('y:', y, 'h:', h / 2)
-    if y > (h - 1) / 2:
+    if round(y, 1) > (h - 1) / 2:
         up_track += 1
         print('t', up_track)
         if (up_track > th):
             print('Up')
+            handle_up()
             up_track = 0
             down_track = 0
     # Down is a little buggy so I might skip down
-    elif y < (h - 2) / 2:
+    elif round(y, 1) < (h - 2) / 2:
         down_track += 1
         print('d', down_track)
         if (down_track > th):
             print('Down')
+            handle_down()
             down_track = 0
             up_track = 0
     else:
