@@ -1,7 +1,5 @@
 concurrent-videocapture==0.0.2
-mss==6.1.0
 numpy==1.17.4
 opencv-python==4.5.1.48
-Pillow==7.0.0
 PyAutoGUI==0.9.52
 virtualenv==20.2.2
