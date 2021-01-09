@@ -84,10 +84,10 @@ def start():
                         if time.time() - last_blink < 2:
                             rec_blink += 1
                         else:
+                            handle_blink(rec_blink)
                             rec_blink = 1
                         # print(rec_blink)
-                        last_blink = handle_blink(rec_blink)
-                        # last_blink = time.time()
+                        last_blink = time.time()
 
         time.sleep(0.1)
         cv2.imshow('image', frame)
