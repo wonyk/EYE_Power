@@ -22,6 +22,8 @@ left_track = 0
 right_track = 0
 up_track = 0
 down_track = 0
+prev_cmd = None
+roll_eyes_count = 0
 # Threshold before the program declare a direction
 th = 3
 
@@ -41,7 +43,7 @@ def start():
 
     # Create a strem output
     h, w = frame.shape[:2]
-    stream_camera = pyfakewebcam.FakeWebcam('/dev/video2', w, h)
+    # stream_camera = pyfakewebcam.FakeWebcam('/dev/video2', w, h)
 
     while True:
         # init = time.time()
@@ -66,12 +68,19 @@ def start():
                         determine_movement(kp[0].pt, w, h)
                         eye = cv2.drawKeypoints(
                             eye, kp, eye, (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+                    eye = cv2.line(eye, (0, int(h / 2)),
+                                   (w, int(h / 2)), (255, 255, 255), 1)
+                    eye = cv2.line(eye, (int(w / 2), 0),
+                                   (int(w / 2), h), (255, 255, 255), 1)
+                    # print('height', round(h / 2, 1))
+                    # print('width', round(w / 2, 1))
                     eye_count = 0
                 else:
                     eye_count += 1
-                    print('c', eye_count)
-                    if eye_count == 5:
-                        print('blinked')
+                    # print('c', eye_count)
+                    if eye_count == 3:
+                        print('rec b', rec_blink)
                         if time.time() - last_blink < 1.5:
                             rec_blink += 1
                         else:
@@ -84,7 +93,7 @@ def start():
         cv2.imshow('image', frame)
 
         # Write to vertual camera
-        stream_camera.schedule_frame(frame[..., ::-1])
+        # stream_camera.schedule_frame(frame[..., ::-1])
         key = cv2.waitKey(1)
         if key == 27:  # ESC
             break
@@ -103,21 +112,22 @@ def determine_movement(coord, width, height):
 def check_lat(x, w):
     global left_track
     global right_track
-    print('x:', x, 'w:', (w + 2) / 2)
+    global prev_cmd
+    # print('x:', x, 'w:', (w + 2) / 2)
     if round(x, 1) > (w + 3) / 2:
         right_track += 1
-        print('r', right_track)
+        # print('r', right_track)
         if (right_track > th):
-            print('Right')
-            handle_right()
+            # print('Right')
+            prev_cmd = handle_right(prev_cmd)
             right_track = 0
             left_track = 0
     elif round(x, 1) < (w - 2) / 2:
         left_track += 1
-        print('l', left_track)
+        # print('l', left_track)
         if (left_track > th):
-            print('Left')
-            handle_left()
+            # print('Left')
+            prev_cmd = handle_left(prev_cmd)
             left_track = 0
             right_track = 0
     else:
@@ -127,24 +137,25 @@ def check_lat(x, w):
 def check_long(y, h):
     global up_track
     global down_track
-    print('y:', y, 'h:', h / 2)
+    global prev_cmd
+    # print('y:', y, 'h:', h / 2)
     if round(y, 1) > (h - 1) / 2:
         up_track += 1
-        print('t', up_track)
+        # print('t', up_track)
         if (up_track > th):
-            print('Up')
-            handle_up()
+            # print('Up')
+            prev_cmd = handle_up(prev_cmd)
             up_track = 0
             down_track = 0
     # Down is a little buggy so I might skip down
-    elif round(y, 1) < (h - 2) / 2:
-        down_track += 1
-        print('d', down_track)
-        if (down_track > th):
-            print('Down')
-            handle_down()
-            down_track = 0
-            up_track = 0
+    # elif round(y, 1) < (h - 2) / 2:
+    #     down_track += 1
+    #     print('d', down_track)
+    #     if (down_track > th):
+    #         print('Down')
+    #         prev_cmd = handle_down(prev_cmd)
+    #         down_track = 0
+    #         up_track = 0
     else:
         pass
 
